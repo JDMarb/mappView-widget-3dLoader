@@ -122,7 +122,7 @@ define(['brease/core/BaseWidget',
         camera.position.set( - 1.8, 0.6, 2.7 );
 
         scene = new THREE.Scene();
-        scene.background = new THREE.Color( 0x000000 );
+        //scene.background = new THREE.Color( 0x000000 );
 
         light = new THREE.AmbientLight( 0x999999 ); // soft white light
         scene.add( light );
@@ -130,7 +130,7 @@ define(['brease/core/BaseWidget',
         var grid = new THREE.GridHelper( 50, 50, 0xffffff, 0x555555 );
         scene.add( grid );
 
-        renderer = new THREE.WebGLRenderer( { canvas: canvasElm, antialias: true } );
+        renderer = new THREE.WebGLRenderer( { canvas: canvasElm, antialias: true, alpha: true } );
 
         renderer.setPixelRatio( window.devicePixelRatio );
         renderer.setSize( clientWidth, clientHeight );
