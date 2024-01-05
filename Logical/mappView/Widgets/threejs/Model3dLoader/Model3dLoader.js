@@ -61,33 +61,23 @@ define(['brease/core/BaseWidget',
 
         p = WidgetClass.prototype;
 
-    var self;
-    var canvasElm, clientHeight, clientWidth, camera, renderer, scene, controls, light;
-    var mixer, skeletonHelper;
-    var clock = new THREE.Clock();
-
-    var kinematics;
-
-    
-
     p.init = function () {
-        self = this;
 
         this.el.addClass('Model3dLoader');
         
-        canvasElm = document.createElement('canvas');
-        canvasElm.id = this.elem.id + '_canvas';
-        canvasElm.width = '100%';
-        canvasElm.height = '100%';
-        canvasElm.style.position = 'absolute';
+        var canvas = document.createElement('canvas');
+        canvas.id = this.elem.id + '_canvas';
+        canvas.width = '100%';
+        canvas.height = '100%';
+        canvas.style.position = 'absolute';
         while (this.elem.firstChild && this.elem.removeChild(this.elem.firstChild));
-        this.elem.appendChild(canvasElm);
+        this.elem.appendChild(canvas);
 
-        p.initThreejs();
+        p.initThreejs.bind(this)();
 
-        p.onWindowResize();
-        window.addEventListener('resize', p.onWindowResize);
-        p.animate();
+        p.onWindowResize.bind(this)();
+        window.addEventListener('resize', p.onWindowResize.bind(this));
+        p.animate.bind(this)();
         
         
         SuperClass.prototype.init.apply(this, arguments);
@@ -112,50 +102,49 @@ define(['brease/core/BaseWidget',
     // Initialisation of threejs scene
     p.initThreejs = function () {
 
-        
+        this.clock = new THREE.Clock();
+
         THREE.Cache.enabled = true;
 
-        clientWidth = canvasElm.clientWidth;
-        clientHeight = canvasElm.clientHeight;
+        var clientWidth = this.elem.firstChild.clientWidth;
+        var clientHeight = this.elem.firstChild.clientHeight;
 
-        camera = new THREE.PerspectiveCamera( 45, clientWidth / clientHeight, 0.01, 1000 );
-        camera.position.set( - 1.8, 0.6, 2.7 );
+        this.camera = new THREE.PerspectiveCamera( 45, clientWidth / clientHeight, 0.01, 1000 );
+        this.camera.position.set( - 1.8, 0.6, 2.7 );
 
-        scene = new THREE.Scene();
-        //scene.background = new THREE.Color( 0x000000 );
+        this.scene = new THREE.Scene();
+        //this.scene.background = new THREE.Color( 0x000000 );
 
-        light = new THREE.AmbientLight( 0x999999 ); // soft white light
-        scene.add( light );
+        this.scene.add(new THREE.AmbientLight( 0x999999 )); // soft white light
 
         var grid = new THREE.GridHelper( 50, 50, 0xffffff, 0x555555 );
-        scene.add( grid );
+        this.scene.add( grid );
 
-        renderer = new THREE.WebGLRenderer( { canvas: canvasElm, antialias: true, alpha: true } );
+        this.renderer = new THREE.WebGLRenderer( { canvas: this.elem.firstChild, antialias: true, alpha: true } );
 
-        renderer.setPixelRatio( window.devicePixelRatio );
-        renderer.setSize( clientWidth, clientHeight );
-        renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        renderer.toneMappingExposure = 1;
-        renderer.outputEncoding = THREE.sRGBEncoding;
-        canvasElm.innerHTML = renderer.domElement;
+        this.renderer.setPixelRatio( window.devicePixelRatio );
+        this.renderer.setSize( clientWidth, clientHeight );
+        this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        this.renderer.toneMappingExposure = 1;
+        this.renderer.outputEncoding = THREE.sRGBEncoding;
+        this.elem.firstChild.innerHTML = this.renderer.domElement;
 
-        controls = new THREE.OrbitControls( camera, renderer.domElement );    
+        this.controls = new THREE.OrbitControls( this.camera, this.renderer.domElement );    
 
-        if(self.settings.model3d != ""){
-            var scaleModel = self.settings.modelScale;
-            var Model3dPath = self.settings.model3d;
-
+        if(this.settings.model3d != ""){
+            var scaleModel = this.settings.modelScale;
+            var Model3dPath = this.settings.model3d;
             
-            if(self.settings.backgroundTexture != ""){
-                var BackgroundImagePath = self.settings.backgroundTexture;
-                p.loadBackgroundAndModel(BackgroundImagePath, Model3dPath, scaleModel);
+            if(this.settings.backgroundTexture != ""){
+                var BackgroundImagePath = this.settings.backgroundTexture;
+                p.loadBackgroundAndModel.bind(this)(BackgroundImagePath, Model3dPath, scaleModel);
             }else{
-                p.loadModelFile(Model3dPath, scaleModel);
+                p.loadModelFile.bind(this)(Model3dPath, scaleModel);
             }
             // TODO : Implement sound in widget parameter
             // p.loadSound();
         }else{
-            console.warn("model3d is not defined in widget " + self.settings.Name);
+            console.warn("model3d is not defined in widget " + this.settings.Name);
         }
 
         window.addEventListener( 'resize', p.onWindowResize );
@@ -167,7 +156,7 @@ define(['brease/core/BaseWidget',
     // p.loadSound = function(){
     //     // create an AudioListener and add it to the camera
     //     var listener = new THREE.AudioListener();
-    //     camera.add( listener );
+    //     this.camera.add( listener );
     //     // create a global audio source
     //     var sound = new THREE.Audio( listener );
     //     // load a sound and set it as the Audio object's buffer
@@ -183,15 +172,15 @@ define(['brease/core/BaseWidget',
     // Load background image and then load model file
     p.loadBackgroundAndModel = function (filePath, Model3dPath, scaleModel){
         new THREE.RGBELoader()
-        .load( filePath, function ( texture ) {
+        .load( filePath, (function ( texture ) {
             texture.mapping = THREE.EquirectangularReflectionMapping;
 
-            scene.background = texture;
-            scene.environment = texture;
+            this.scene.background = texture;
+            this.scene.environment = texture;
 
-            p.render();
-            p.loadModelFile(Model3dPath, scaleModel);
-        });
+            p.render.bind(this)();
+            p.loadModelFile.bind(this)(Model3dPath, scaleModel);
+        }).bind(this));
     };
 
     // Load model file there is possible retries of loading file limit to 4 retries max
@@ -200,7 +189,6 @@ define(['brease/core/BaseWidget',
 		const filename = filePath.replace(/^.*[\\\/]/, '');
         const folderPath = filePath.replace(/(.*?)[^/]*\..*$/,'$1');
 		const extension = filename.split( '.' ).pop().toLowerCase();
-        
         switch ( extension ) {
 
             case '3dm':
@@ -211,25 +199,25 @@ define(['brease/core/BaseWidget',
                 // WARNING for use 3dm files
                 // You must add rhino3dm package to Media folder
                 loader.setLibraryPath( 'Media/rhino3dm/' );
-                loader.load( filePath, function ( object ) {
+                loader.load( filePath, (function ( object ) {
                     object.scale.set(scaleModel, scaleModel, scaleModel);
-                    scene.add(object);
-                    p.render();
-                }, function () {
+                    this.scene.add(object);
+                    p.render.bind(this)();
+                }).bind(this), function () {
 
-                }, function(e){
+                }, (function(e){
                     if(retries<3){
                         console.warn(e);
                         console.log("Retrying to load model");
                         retries++;
-                        setTimeout(function(){
-                            p.loadModelFile(filePath, scaleModel, retries);
-                        }, 1000);
+                        setTimeout((function(){
+                            p.loadModelFile.bind(this)(filePath, scaleModel, retries);
+                        }).bind(this), 1000);
                     }else{
                         console.warn(e);
                     }
                     
-                } );
+                }).bind(this) );
                 break;
 
             }
@@ -243,7 +231,7 @@ define(['brease/core/BaseWidget',
 
                 var loader = new THREE.TDSLoader( );
                 loader.setResourcePath( folderPath+'textures/' );
-                loader.load( filePath, function ( object ) {
+                loader.load( filePath, (function ( object ) {
 
                     object.traverse( function ( child ) {
 
@@ -257,23 +245,23 @@ define(['brease/core/BaseWidget',
                     } );
 
                     object.scale.set(scaleModel, scaleModel, scaleModel);
-                    scene.add(object);
-                    p.render();
-                }, function () {
+                    this.scene.add(object);
+                    p.render.bind(this)();
+                }).bind(this), function () {
 
-                }, function(e){
+                }, (function(e){
                     if(retries<3){
                         console.warn(e);
                         console.log("Retrying to load model");
                         retries++;
-                        setTimeout(function(){
-                            p.loadModelFile(filePath, scaleModel, retries);
-                        }, 1000);
+                        setTimeout((function(){
+                            p.loadModelFile.bind(this)(filePath, scaleModel, retries);
+                        }).bind(this), 1000);
                     }else{
                         console.warn(e);
                     }
                     
-                } );
+                }).bind(this) );
 
                 break;
 
@@ -283,7 +271,7 @@ define(['brease/core/BaseWidget',
 
             {
                 var loader = new THREE.ThreeMFLoader();
-                loader.load(filePath, function(object){
+                loader.load(filePath, (function(object){
                     object.quaternion.setFromEuler( new THREE.Euler( - Math.PI / 2, 0, 0 ) ); 	// z-up conversion
 
                     object.traverse( function ( child ) {
@@ -293,23 +281,23 @@ define(['brease/core/BaseWidget',
                     } );
 
                     object.scale.set(scaleModel, scaleModel, scaleModel);
-                    scene.add(object);
+                    this.scene.add(object);
                     p.render();
-                }, function () {
+                }).bind(this), function () {
 
-                }, function(e){
+                }, (function(e){
                     if(retries<3){
                         console.warn(e);
                         console.log("Retrying to load model");
                         retries++;
-                        setTimeout(function(){
-                            p.loadModelFile(filePath, scaleModel, retries);
-                        }, 1000);
+                        setTimeout((function(){
+                            p.loadModelFile.bind(this)(filePath, scaleModel, retries);
+                        }).bind(this), 1000);
                     }else{
                         console.warn(e);
                     }
                     
-                } );
+                }).bind(this) );
 
                 break;
             }
@@ -318,114 +306,113 @@ define(['brease/core/BaseWidget',
 
             {
                 var loader = new THREE.AMFLoader();
-                loader.load(filePath, function(object){
+                loader.load(filePath, (function(object){
                     object.scale.set(scaleModel, scaleModel, scaleModel);
-                    scene.add(object);
-                    p.render();
-                }, function () {
+                    this.scene.add(object);
+                    p.render.bind(this)();
+                }).bind(this), function () {
 
-                }, function(e){
+                }, (function(e){
                     if(retries<3){
                         console.warn(e);
                         console.log("Retrying to load model");
                         retries++;
-                        setTimeout(function(){
-                            p.loadModelFile(filePath, scaleModel, retries);
-                        }, 1000);
+                        setTimeout((function(){
+                            p.loadModelFile.bind(this)(filePath, scaleModel, retries);
+                        }).bind(this), 1000);
                     }else{
                         console.warn(e);
                     }
                     
-                } );
+                }).bind(this) );
                 break;
             }
 
             case 'bvh':
                 var loader = new THREE.BVHLoader();
-                loader.load( filePath, function ( result ) {
+                loader.load( filePath, (function ( result ) {
 
-                    skeletonHelper = new THREE.SkeletonHelper( result.skeleton.bones[ 0 ] );
-                    skeletonHelper.skeleton = result.skeleton; // allow animation mixer to bind to THREE.SkeletonHelper directly
+                    this.skeletonHelper = new THREE.SkeletonHelper( result.skeleton.bones[ 0 ] );
+                    this.skeletonHelper.skeleton = result.skeleton; // allow animation mixer to bind to THREE.SkeletonHelper directly
 
                     var boneContainer = new THREE.Group();
                     boneContainer.add( result.skeleton.bones[ 0 ] );
 
                     boneContainer.scale.set(scaleModel, scaleModel, scaleModel);
-                    skeletonHelper.scale.set(scaleModel, scaleModel, scaleModel);
+                    this.skeletonHelper.scale.set(scaleModel, scaleModel, scaleModel);
 
-                    scene.add( skeletonHelper );
-                    scene.add( boneContainer );
+                    this.scene.add( this.skeletonHelper );
+                    this.scene.add( boneContainer );
 
-                    if(self.settings.activateAnimation){
+                    if(this.settings.activateAnimation){
                         // play animation
-                        mixer = new THREE.AnimationMixer( skeletonHelper );
-                        mixer.clipAction( result.clip ).setEffectiveWeight( 1.0 ).play();
+                        this.mixer = new THREE.AnimationMixer( this.skeletonHelper );
+                        this.mixer.clipAction( result.clip ).setEffectiveWeight( 1.0 ).play();
                     }
                     
 
-                }, function () {
+                }).bind(this), function () {
 
-                }, function(e){
+                }, (function(e){
                     if(retries<3){
                         console.warn(e);
                         console.log("Retrying to load model");
                         retries++;
-                        setTimeout(function(){
-                            p.loadModelFile(filePath, scaleModel, retries);
-                        }, 1000);
+                        setTimeout((function(){
+                            p.loadModelFile.bind(this)(filePath, scaleModel, retries);
+                        }).bind(this), 1000);
                     }else{
                         console.warn(e);
                     }
                     
-                } );
+                }).bind(this) );
                 break;
 
             case 'dae':
 
             {
                 var loader = new THREE.ColladaLoader();
-                loader.load( filePath, function(collada){
+                loader.load( filePath, (function(collada){
                     var dae = collada.scene;
                     var animations = dae.animations;
-                    dae.traverse( function ( node ) {
+                    dae.traverse( (function ( node ) {
                         if ( node.isSkinnedMesh ) {
                             node.frustumCulled = false;
                         }
-                        if(self.settings.activateKinematics && node.isMesh){
+                        if(this.settings.activateKinematics && node.isMesh){
                             node.material.flatShading = true;
                         }
-                    } );
+                    }).bind(this) );
 
                     dae.updateMatrix();
-                    kinematics = collada.kinematics;
+                    //kinematics = collada.kinematics;
 
 
                     // TODO: Need to add selection of animations
-                    if(self.settings.activateAnimation){
-                        mixer = new THREE.AnimationMixer( dae );
-                        mixer.clipAction( animations[0] ).play();
-                        
+                    if(this.settings.activateAnimation){
+                        this.mixer = new THREE.AnimationMixer( dae );
+                        this.mixer.clipAction( animations[0] ).play();
                     }
 
                     dae.scale.set(scaleModel, scaleModel, scaleModel);
-                    scene.add( dae );
+                    this.scene.add( dae );
                     
-                    p.render();
-                }, function () {
+                    p.render.bind(this)();
+                }).bind(this), function () {
 
-                }, function(e){
+                }, (function(e){
                     if(retries<3){
                         console.warn(e);
                         console.log("Retrying to load model");
                         retries++;
-                        setTimeout(function(){
-                            p.loadModelFile(filePath, scaleModel, retries);
-                        }, 1000);
+                        setTimeout((function(){
+                            p.loadModelFile.bind(this)(filePath, scaleModel, retries);
+                        }).bind(this), 1000);
                     }else{
                         console.warn(e);
                     }
                     
-                } );
+                }).bind(this) );
                 break;
 
             }
@@ -439,7 +426,7 @@ define(['brease/core/BaseWidget',
                 // WARNING for use drc files
                 // You must add draco package to Media folder
                 loader.setDecoderPath( 'Media/draco/' );
-                loader.load( filePath, function ( geometry ) {
+                loader.load( filePath, (function ( geometry ) {
 
                     var object;
                     geometry.computeVertexNormals();
@@ -462,25 +449,25 @@ define(['brease/core/BaseWidget',
 
 
                     object.scale.set(scaleModel, scaleModel, scaleModel);
-                    scene.add( object );
+                    this.scene.add( object );
                     loader.dispose();
 
                 
-                }, function () {
+                }).bind(this), function () {
 
-                }, function(e){
+                }, (function(e){
                     if(retries<3){
                         console.warn(e);
                         console.log("Retrying to load model");
                         retries++;
-                        setTimeout(function(){
-                            p.loadModelFile(filePath, scaleModel, retries);
-                        }, 1000);
+                        setTimeout((function(){
+                            p.loadModelFile.bind(this)(filePath, scaleModel, retries);
+                        }).bind(this), 1000);
                     }else{
                         console.warn(e);
                     }
                     
-                } );
+                }).bind(this) );
 
                 break;
 
@@ -490,11 +477,11 @@ define(['brease/core/BaseWidget',
 
             {
                 var loader = new THREE.FBXLoader( );
-                loader.load( filePath, function ( object ) {
+                loader.load( filePath, (function ( object ) {
 
-                    if(self.settings.activateAnimation){
-                        mixer = new THREE.AnimationMixer( object );
-                        mixer.clipAction( object.animations[0] ).play();
+                    if(this.settings.activateAnimation){
+                        this.mixer = new THREE.AnimationMixer( object );
+                        this.mixer.clipAction( object.animations[0] ).play();
                     }
 
                     object.traverse( function ( child ) {
@@ -508,24 +495,24 @@ define(['brease/core/BaseWidget',
 
                     } );
                     object.scale.set(scaleModel, scaleModel, scaleModel);
-                    scene.add( object );
+                    this.scene.add( object );
 
                 
-                }, function () {
+                }).bind(this), function () {
 
-                }, function(e){
+                }, (function(e){
                     if(retries<3){
                         console.warn(e);
                         console.log("Retrying to load model");
                         retries++;
-                        setTimeout(function(){
-                            p.loadModelFile(filePath, scaleModel, retries);
-                        }, 1000);
+                        setTimeout((function(){
+                            p.loadModelFile.bind(this)(filePath, scaleModel, retries);
+                        }).bind(this), 1000);
                     }else{
                         console.warn(e);
                     }
                     
-                } );
+                }).bind(this) );
 
 
                 break;
@@ -542,31 +529,31 @@ define(['brease/core/BaseWidget',
 
                 var loader = new THREE.GLTFLoader();
                 loader.setDRACOLoader( dracoLoader );
-                loader.load( filePath, function ( gltf ) {
+                loader.load( filePath, (function ( gltf ) {
 
 
-                    if(self.settings.activateAnimation){
-                        mixer = new THREE.AnimationMixer( gltf.scene );
-                        mixer.clipAction( gltf.animations[0] ).play();
+                    if(this.settings.activateAnimation){
+                        this.mixer = new THREE.AnimationMixer( gltf.scene );
+                        this.mixer.clipAction( gltf.animations[0] ).play();
                     }
 
-                    scene.add( gltf.scene );
+                    this.scene.add( gltf.scene );
 
-                }, function () {
+                }).bind(this), function () {
 
-                }, function(e){
+                }, (function(e){
                     if(retries<3){
                         console.warn(e);
                         console.log("Retrying to load model");
                         retries++;
-                        setTimeout(function(){
-                            p.loadModelFile(filePath, scaleModel, retries);
-                        }, 1000);
+                        setTimeout((function(){
+                            p.loadModelFile.bind(this)(filePath, scaleModel, retries);
+                        }).bind(this), 1000);
                     }else{
                         console.warn(e);
                     }
                     
-                } );
+                }).bind(this) );
 
 
                 break;
@@ -578,25 +565,25 @@ define(['brease/core/BaseWidget',
             {
 
                 new THREE.GLTFLoader()
-                .load(filePath, function(gltf){
+                .load(filePath, (function(gltf){
                     gltf.scene.scale.set(scaleModel, scaleModel, scaleModel);
-                    scene.add( gltf.scene );
-                    p.render();
-                }, function () {
+                    this.scene.add( gltf.scene );
+                    p.render.bind(this)();
+                }).bind(this), function () {
 
-                }, function(e){
+                }, (function(e){
                     if(retries<3){
                         console.warn(e);
                         console.log("Retrying to load model");
                         retries++;
-                        setTimeout(function(){
-                            p.loadModelFile(filePath, scaleModel, retries);
-                        }, 1000);
+                        setTimeout((function(){
+                            p.loadModelFile.bind(this)(filePath, scaleModel, retries);
+                        }).bind(this), 1000);
                     }else{
                         console.warn(e);
                     }
                     
-                } );
+                }).bind(this) );
 
                 break;
 
@@ -609,24 +596,24 @@ define(['brease/core/BaseWidget',
 
             //     var loader = new THREE.IFCLoader();
             //     loader.ifcManager.setWasmPath( 'Media/ifc/' );
-            //     loader.load( filePath, function ( model ) {
-			// 		scene.add( model.mesh );
-			// 		p.render();
-            //     }, function () {
+            //     loader.load( filePath, (function ( model ) {
+			// 		this.scene.add( model.mesh );
+			// 		p.render.bind(this)();
+            //     }).bind(this), function () {
 
-            //     }, function(e){
+            //     }, (function(e){
             //         if(retries<3){
             //             console.warn(e);
             //             console.log("Retrying to load model");
             //             retries++;
-            //             setTimeout(function(){
-            //                 p.loadModelFile(filePath, scaleModel, retries);
-            //             }, 1000);
+            //             setTimeout((function(){
+            //                 p.loadModelFile.bind(this)(filePath, scaleModel, retries);
+            //             }).bind(this), 1000);
             //         }else{
             //             console.warn(e);
             //         }
                     
-            //     } );
+            //     }).bind(this) );
    
 
             // 	break;
@@ -997,35 +984,36 @@ define(['brease/core/BaseWidget',
 	};
 
     p.onWindowResize = function () {
-        canvasElm.style.width = "100%";
-        canvasElm.style.height = "100%";
+        
+        this.elem.firstChild.style.width = "100%";
+        this.elem.firstChild.style.height = "100%";
 
 
-        clientWidth = canvasElm.clientWidth;
-        clientHeight = canvasElm.clientHeight;
+        var clientWidth = this.elem.firstChild.clientWidth;
+        var clientHeight = this.elem.firstChild.clientHeight;
 
-        camera.aspect = clientWidth / clientHeight;
-        camera.updateProjectionMatrix();
+        this.camera.aspect = clientWidth / clientHeight;
+        this.camera.updateProjectionMatrix();
 
-        renderer.setSize( clientWidth, clientHeight );
+        this.renderer.setSize( clientWidth, clientHeight );
 
     };
 
 
     p.animate = function () {
-        requestAnimationFrame( p.animate );
+        requestAnimationFrame( p.animate.bind(this) );
 
-        var delta = clock.getDelta();
+        var delta = this.clock.getDelta();
 
-        if ( mixer ) mixer.update( delta );
-        if ( controls ) controls.update();
+        if ( this.mixer ) this.mixer.update( delta );
+        if ( this.controls ) this.controls.update();
 
         
-        p.render();
+        p.render.bind(this)();
     };
 
     p.render = function(){
-        renderer.render( scene, camera );
+        this.renderer.render( this.scene, this.camera );
     };
 
 
