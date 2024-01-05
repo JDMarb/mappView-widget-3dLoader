@@ -16,7 +16,7 @@
 			<xs:attribute name="activateKinematics" use="optional" type="types:Boolean" default="false" />
 			<xs:attribute name="activateAnimation" use="optional" type="types:Boolean" default="false" />
 			<xs:attribute name="model3d" use="optional" type="types:FilePath" default="" />
-			<xs:attribute name="modelScale" use="optional" type="types:Integer" default="1" />
+			<xs:attribute name="modelScale" use="optional" type="types:Number" default="1" />
 			<xs:attribute name="backgroundTexture" use="optional" type="types:ImagePath" default="" />
 			<xs:attribute name="maxHeight" use="optional" type="types:Size" default="0" />
 			<xs:attribute name="minHeight" use="optional" type="types:Size" default="0" />

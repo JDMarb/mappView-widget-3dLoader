@@ -397,7 +397,7 @@
         },
         {
             "name": "modelScale",
-            "type": "Integer",
+            "type": "Number",
             "initOnly": true,
             "localizable": false,
             "editableBinding": false,

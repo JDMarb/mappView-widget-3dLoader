@@ -184,7 +184,7 @@
 			<Property name="activateAnimation" type="Boolean" initOnly="true" localizable="false" editableBinding="false" readOnly="false" required="false" projectable="true" category="Data" defaultValue="false">
 				<Description>Load animation if animation is in file.</Description>
 			</Property>
-			<Property name="modelScale" type="Integer" initOnly="true" localizable="false" editableBinding="false" readOnly="false" required="false" projectable="true" category="Data" defaultValue="1">
+			<Property name="modelScale" type="Number" initOnly="true" localizable="false" editableBinding="false" readOnly="false" required="false" projectable="true" category="Data" defaultValue="1">
 				<Description>Set scale of 3d model.</Description>
 			</Property>
 			<Property name="draggable" type="Boolean" initOnly="true" localizable="false" editableBinding="false" readOnly="false" required="false" projectable="true" category="Behavior" defaultValue="false">
