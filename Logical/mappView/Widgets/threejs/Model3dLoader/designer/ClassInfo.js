@@ -114,6 +114,46 @@ define(["brease/core/designer/BaseWidget/ClassInfo"], function (s, e) {
                             type: "Number"
                         }
                     }
+                },
+                SetPosX: { 
+                    method: "setPosX", 
+                    parameter: { 
+                        value: { 
+                            name: "value", 
+                            index: 0, 
+                            type: "Number" 
+                        } 
+                    } 
+                }, 
+                SetPosY: { 
+                    method: "setPosY", 
+                    parameter: { 
+                        value: { 
+                            name: "value", 
+                            index: 0, 
+                            type: "Number" 
+                        } 
+                    } 
+                }, 
+                SetPosZ: { 
+                    method: "setPosY", 
+                    parameter: { 
+                        value: { 
+                            name: "value", 
+                            index: 0, 
+                            type: "Number" 
+                        } 
+                    } 
+                },
+                SetShowGrid: { 
+                    method: "setShowGrid", 
+                    parameter: { 
+                        value: { 
+                            name: "value", 
+                            index: 0, 
+                            type: "Boolean" 
+                        } 
+                    } 
                 }
             },
             properties: {}

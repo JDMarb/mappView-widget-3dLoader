@@ -19,6 +19,7 @@
   </Dialogs>
   <Contents>
     <!--<Content refId="" />-->
+    <Content refId="content_0" />
   </Contents>
   <SnippetsSets>
     <!--<SnippetsSet refId=""/>-->

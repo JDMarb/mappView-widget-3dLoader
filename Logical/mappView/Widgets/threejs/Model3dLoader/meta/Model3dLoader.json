@@ -410,6 +410,62 @@
             "defaultValue": "1"
         },
         {
+            "name": "posX",
+            "type": "Number",
+            "initOnly": false,
+            "localizable": false,
+            "editableBinding": true,
+            "readOnly": false,
+            "required": false,
+            "owner": "widgets.threejs.Model3dLoader",
+            "projectable": true,
+            "description": "Move the model",
+            "category": "Data",
+            "defaultValue": "0"
+          },
+          {
+            "name": "posY",
+            "type": "Number",
+            "initOnly": false,
+            "localizable": false,
+            "editableBinding": true,
+            "readOnly": false,
+            "required": false,
+            "owner": "widgets.threejs.Model3dLoader",
+            "projectable": true,
+            "description": "Move the model",
+            "category": "Data",
+            "defaultValue": "0"
+          },
+          {
+            "name": "posZ",
+            "type": "Number",
+            "initOnly": false,
+            "localizable": false,
+            "editableBinding": true,
+            "readOnly": false,
+            "required": false,
+            "owner": "widgets.threejs.Model3dLoader",
+            "projectable": true,
+            "description": "Move the model",
+            "category": "Data",
+            "defaultValue": "0"
+          },
+          {
+            "name": "showGrid",
+            "type": "Boolean",
+            "initOnly": false,
+            "localizable": false,
+            "editableBinding": true,
+            "readOnly": false,
+            "required": false,
+            "owner": "widgets.threejs.Model3dLoader",
+            "projectable": true,
+            "description": "show or hide the grid",
+            "category": "Data",
+            "defaultValue": "true"
+          },
+        {
             "name": "draggable",
             "type": "Boolean",
             "initOnly": true,
@@ -619,11 +675,9 @@
     "dependencies": {
         "files": [
             "brease/core/BaseWidget.js",
-            "widgets/brease/Image/libs/config/Config.js",
-            "widgets/brease/common/libs/flux/stores/ImageStore/ImageStore.js",
-            "widgets/brease/common/libs/flux/stores/ImageStore/ImageActions.js",
-            "widgets/brease/common/libs/flux/views/ImageView/ImageView.js",
+            "widgets/threejs/Model3dLoader/libs/config/Config.js",
             "brease/decorators/DragAndDropCapability.js",
+            "widgets/threejs/Model3dLoader/libs/threejs/Three.js",
             "widgets/brease/common/DragDropProperties/libs/DraggablePropertiesEvents.js",
             "widgets/brease/common/DragDropProperties/libs/DroppablePropertiesEvents.js"
         ],
@@ -634,8 +688,8 @@
     },
     "descriptions": {
         "short": "Grafikobjekt",
-        "de": "Zeichnet ein Quadrat oder Rechteck",
-        "en": " Model3dLoader"
+        "de": "Model3dLoader",
+        "en": "Model3dLoader"
     },
     "superproperties": {
         "id": {

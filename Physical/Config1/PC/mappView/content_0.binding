@@ -1,5 +1,38 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <BindingsSet id="content_0_binding" xmlns="http://www.br-automation.com/iat2015/binding/engineering/v2" xmlns:bt="http://www.br-automation.com/iat2015/bindingListTypes/engineering/v2" xmlns:be="http://www.br-automation.com/iat2015/bindingListEmbedded/engineering/v2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <Bindings>
-	</Bindings>
+	<Bindings>
+	
+	<Binding mode="twoWay">
+<Source xsi:type="opcUa" refId="::Program:posX" attribute="value" />
+<Target xsi:type="brease" contentRefId="content_0" widgetRefId="Model3dLoader2" attribute="posX" />
+</Binding>
+<Binding mode="twoWay">
+<Source xsi:type="opcUa" refId="::Program:posY" attribute="value" />
+<Target xsi:type="brease" contentRefId="content_0" widgetRefId="Model3dLoader2" attribute="posY" />
+</Binding>
+<Binding mode="twoWay">
+<Source xsi:type="opcUa" refId="::Program:posZ" attribute="value" />
+<Target xsi:type="brease" contentRefId="content_0" widgetRefId="Model3dLoader2" attribute="posZ" />
+</Binding>
+<Binding mode="twoWay">
+<Source xsi:type="opcUa" refId="::Program:showGrid" attribute="value" />
+<Target xsi:type="brease" contentRefId="content_0" widgetRefId="Model3dLoader2" attribute="showGrid" />
+</Binding>
+<Binding mode="twoWay">
+<Source xsi:type="opcUa" refId="::Program:posX" attribute="value" />
+<Target xsi:type="brease" contentRefId="content_0" widgetRefId="NumericInputX" attribute="value" />
+</Binding>
+<Binding mode="twoWay">
+<Source xsi:type="opcUa" refId="::Program:posY" attribute="value" />
+<Target xsi:type="brease" contentRefId="content_0" widgetRefId="NumericInputY" attribute="value" />
+</Binding>
+<Binding mode="twoWay">
+<Source xsi:type="opcUa" refId="::Program:posZ" attribute="value" />
+<Target xsi:type="brease" contentRefId="content_0" widgetRefId="NumericInputZ" attribute="value" />
+</Binding>
+<Binding mode="twoWay">
+<Source xsi:type="opcUa" refId="::Program:showGrid" attribute="value" />
+<Target xsi:type="brease" contentRefId="content_0" widgetRefId="CheckBoxGrid" attribute="value" />
+</Binding>
+</Bindings>
 </BindingsSet>

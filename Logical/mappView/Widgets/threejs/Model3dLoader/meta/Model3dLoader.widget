@@ -8,6 +8,7 @@
 		<Dependencies>
 			<Files>
 				<File>brease/core/BaseWidget.js</File>
+				<File>widgets/threejs/Model3dLoader/libs/config/Config.js</File>
 				<File>brease/decorators/DragAndDropCapability.js</File>
 				<File>widgets/brease/common/DragDropProperties/libs/DraggablePropertiesEvents.js</File>
 				<File>widgets/brease/common/DragDropProperties/libs/DroppablePropertiesEvents.js</File>
@@ -186,6 +187,18 @@
 			</Property>
 			<Property name="modelScale" type="Number" initOnly="true" localizable="false" editableBinding="false" readOnly="false" required="false" projectable="true" category="Data" defaultValue="1">
 				<Description>Set scale of 3d model.</Description>
+			</Property>
+			<Property name="posX" type="Number" initOnly="false" localizable="false" editableBinding="true" readOnly="false" required="false" projectable="true" category="Data" defaultValue="0">
+				<Description>Move The Model</Description>
+			</Property>
+			<Property name="posY" type="Number" initOnly="false" localizable="false" editableBinding="true" readOnly="false" required="false" projectable="true" category="Data" defaultValue="0">
+				<Description>Move The Model</Description>
+			</Property>
+			<Property name="posZ" type="Number" initOnly="false" localizable="false" editableBinding="true" readOnly="false" required="false" projectable="true" category="Data" defaultValue="0">
+				<Description>Move The Model</Description>
+			</Property>
+			<Property name="showGrid" type="Boolean" initOnly="false" localizable="false" editableBinding="true" readOnly="false" required="false" projectable="true" category="Data" defaultValue="true">
+				<Description>Show or hide the grid</Description>
 			</Property>
 			<Property name="draggable" type="Boolean" initOnly="true" localizable="false" editableBinding="false" readOnly="false" required="false" projectable="true" category="Behavior" defaultValue="false">
 				<Description>Make widget draggable.</Description>

@@ -1,18 +1,18 @@
-define(['brease/core/BaseWidget',
-    'brease/events/BreaseEvent',
-    'brease/decorators/DragAndDropCapability',
-    'widgets/threejs/Model3dLoader/libs/threejs/Three',
-    'widgets/brease/common/DragDropProperties/libs/DraggablePropertiesEvents',
-    'widgets/brease/common/DragDropProperties/libs/DroppablePropertiesEvents',
-], function (SuperClass, BreaseEvent, dragAndDropCapability, THREE) {
-
-    'use strict';
+define([
+    "brease/core/BaseWidget",
+    "widgets/threejs/Model3dLoader/libs/config/Config",
+    "brease/decorators/DragAndDropCapability",
+    "widgets/threejs/Model3dLoader/libs/threejs/Three",
+    "widgets/brease/common/DragDropProperties/libs/DraggablePropertiesEvents",
+    "widgets/brease/common/DragDropProperties/libs/DroppablePropertiesEvents"
+], function (SuperClass, Config, dragAndDropCapability, THREE) {
+    "use strict";
 
     /**
-     * @class widgets.brease.Model3dLoader
+     * @class widgets.threejs.Model3dLoader
      * #Description
      * Widget for displaying an Model3dLoader
-     * @breaseNote 
+     * @breaseNote
      * @extends brease.core.BaseWidget
      *
      * @mixins widgets.brease.common.DragDropProperties.libs.DraggablePropertiesEvents
@@ -29,14 +29,6 @@ define(['brease/core/BaseWidget',
      */
 
     /**
-     * @htmltag examples
-     * ##Configuration examples:  
-     *
-     *     <div id="Model3dLoader01" data-brease-widget="widgets/brease/Model3dLoader" data-brease-options="{'width':200, 'height':100}"></div>
-     *
-     */
-
-    /**
      * @cfg {String} tooltip=''
      * @iatStudioExposed
      * @hide
@@ -47,47 +39,39 @@ define(['brease/core/BaseWidget',
      * @hide
      */
 
-    var defaultSettings = {
-            backgroundTexture: "",
-            model3d: "",
-            activateAnimation: false,
-            activateKinematics: false,
-            modelScale: 1
-        },
-
+    var defaultSettings = Config,
         WidgetClass = SuperClass.extend(function Model3dLoader() {
             SuperClass.apply(this, arguments);
         }, defaultSettings),
-
         p = WidgetClass.prototype;
 
     p.init = function () {
+        this.el.addClass("Model3dLoader");
 
-        this.el.addClass('Model3dLoader');
-        
-        var canvas = document.createElement('canvas');
-        canvas.id = this.elem.id + '_canvas';
-        canvas.width = '100%';
-        canvas.height = '100%';
-        canvas.style.position = 'absolute';
+        this.canvas = document.createElement("canvas");
+        this.canvas.id = this.elem.id + "_canvas";
+        this.canvas.width = "100%";
+        this.canvas.height = "100%";
+        this.canvas.style.position = "absolute";
         while (this.elem.firstChild && this.elem.removeChild(this.elem.firstChild));
-        this.elem.appendChild(canvas);
+        this.elem.appendChild(this.canvas);
 
         p.initThreejs.bind(this)();
 
         p.onWindowResize.bind(this)();
-        window.addEventListener('resize', p.onWindowResize.bind(this));
         p.animate.bind(this)();
-        
-        
+
         SuperClass.prototype.init.apply(this, arguments);
     };
 
     // override method called in BaseWidget.init
     p._initEditor = function () {
         var widget = this;
-        widget.el.addClass('iatd-outline'); //gray outline only visible in content editor
-        require(['widgets/threejs/Model3dLoader/libs/EditorHandles', 'brease/events/BreaseEvent'], function (EditorHandles, BreaseEvent) {
+        widget.el.addClass("iatd-outline"); //gray outline only visible in content editor
+        require(["widgets/threejs/Model3dLoader/libs/EditorHandles", "brease/events/BreaseEvent"], function (
+            EditorHandles,
+            BreaseEvent
+        ) {
             var editorHandles = new EditorHandles(widget);
             widget.getHandles = function () {
                 return editorHandles.getHandles();
@@ -101,56 +85,54 @@ define(['brease/core/BaseWidget',
 
     // Initialisation of threejs scene
     p.initThreejs = function () {
-
         this.clock = new THREE.Clock();
 
         THREE.Cache.enabled = true;
 
-        var clientWidth = this.elem.firstChild.clientWidth;
-        var clientHeight = this.elem.firstChild.clientHeight;
+        var clientWidth = this.canvas.clientWidth;
+        var clientHeight = this.canvas.clientHeight;
 
-        this.camera = new THREE.PerspectiveCamera( 45, clientWidth / clientHeight, 0.01, 1000 );
-        this.camera.position.set( - 1.8, 0.6, 2.7 );
+        this.camera = new THREE.PerspectiveCamera(45, clientWidth / clientHeight, 0.01, 1000);
+        this.camera.position.set(-1.8, 0.6, 2.7);
 
         this.scene = new THREE.Scene();
         //this.scene.background = new THREE.Color( 0x000000 );
 
-        this.scene.add(new THREE.AmbientLight( 0x999999 )); // soft white light
+        this.scene.add(new THREE.AmbientLight(0x999999)); // soft white light
 
-        var grid = new THREE.GridHelper( 50, 50, 0xffffff, 0x555555 );
-        this.scene.add( grid );
+        this.grid = new THREE.GridHelper(50, 50, 0xffffff, 0x555555);
+        this.scene.add(this.grid);
 
-        this.renderer = new THREE.WebGLRenderer( { canvas: this.elem.firstChild, antialias: true, alpha: true } );
+        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, alpha: true });
 
-        this.renderer.setPixelRatio( window.devicePixelRatio );
-        this.renderer.setSize( clientWidth, clientHeight );
+        this.renderer.setPixelRatio(window.devicePixelRatio);
+        this.renderer.setSize(clientWidth, clientHeight);
         this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
         this.renderer.toneMappingExposure = 1;
         this.renderer.outputEncoding = THREE.sRGBEncoding;
-        this.elem.firstChild.innerHTML = this.renderer.domElement;
+        this.canvas.innerHTML = this.renderer.domElement;
 
-        this.controls = new THREE.OrbitControls( this.camera, this.renderer.domElement );    
+        this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
 
-        if(this.settings.model3d != ""){
+        if (this.settings.model3d != "") {
             var scaleModel = this.settings.modelScale;
             var Model3dPath = this.settings.model3d;
-            
-            if(this.settings.backgroundTexture != ""){
+
+            if (this.settings.backgroundTexture != "") {
                 var BackgroundImagePath = this.settings.backgroundTexture;
                 p.loadBackgroundAndModel.bind(this)(BackgroundImagePath, Model3dPath, scaleModel);
-            }else{
+            } else {
                 p.loadModelFile.bind(this)(Model3dPath, scaleModel);
             }
             // TODO : Implement sound in widget parameter
             // p.loadSound();
-        }else{
+        } else {
             console.warn("model3d is not defined in widget " + this.settings.Name);
         }
 
-        window.addEventListener( 'resize', p.onWindowResize );
+        window.addEventListener("resize", p.onWindowResize.bind(this));
 
-        console.log("Threejs initialized")
-
+        console.log("Threejs initialized");
     };
     // TODO : Implement sound in widget parameter
     // p.loadSound = function(){
@@ -170,423 +152,425 @@ define(['brease/core/BaseWidget',
     // }
 
     // Load background image and then load model file
-    p.loadBackgroundAndModel = function (filePath, Model3dPath, scaleModel){
-        new THREE.RGBELoader()
-        .load( filePath, (function ( texture ) {
-            texture.mapping = THREE.EquirectangularReflectionMapping;
+    p.loadBackgroundAndModel = function (filePath, Model3dPath, scaleModel) {
+        new THREE.RGBELoader().load(
+            filePath,
+            function (texture) {
+                texture.mapping = THREE.EquirectangularReflectionMapping;
 
-            this.scene.background = texture;
-            this.scene.environment = texture;
+                this.scene.background = texture;
+                this.scene.environment = texture;
 
-            p.render.bind(this)();
-            p.loadModelFile.bind(this)(Model3dPath, scaleModel);
-        }).bind(this));
+                p.render.bind(this)();
+                p.loadModelFile.bind(this)(Model3dPath, scaleModel);
+            }.bind(this)
+        );
     };
 
     // Load model file there is possible retries of loading file limit to 4 retries max
-    p.loadModelFile = function ( filePath, scaleModel, retries ) {
-        retries = typeof retries !== 'undefined' ? retries : 0;
-		const filename = filePath.replace(/^.*[\\\/]/, '');
-        const folderPath = filePath.replace(/(.*?)[^/]*\..*$/,'$1');
-		const extension = filename.split( '.' ).pop().toLowerCase();
-        switch ( extension ) {
-
-            case '3dm':
-
-            {
-
+    p.loadModelFile = function (filePath, scaleModel, retries) {
+        retries = typeof retries !== "undefined" ? retries : 0;
+        const filename = filePath.replace(/^.*[\\\/]/, "");
+        const folderPath = filePath.replace(/(.*?)[^/]*\..*$/, "$1");
+        const extension = filename.split(".").pop().toLowerCase();
+        switch (extension) {
+            case "3dm": {
                 var loader = new THREE.Rhino3dmLoader();
                 // WARNING for use 3dm files
                 // You must add rhino3dm package to Media folder
-                loader.setLibraryPath( 'Media/rhino3dm/' );
-                loader.load( filePath, (function ( object ) {
-                    object.scale.set(scaleModel, scaleModel, scaleModel);
-                    this.scene.add(object);
-                    p.render.bind(this)();
-                }).bind(this), function () {
-
-                }, (function(e){
-                    if(retries<3){
-                        console.warn(e);
-                        console.log("Retrying to load model");
-                        retries++;
-                        setTimeout((function(){
-                            p.loadModelFile.bind(this)(filePath, scaleModel, retries);
-                        }).bind(this), 1000);
-                    }else{
-                        console.warn(e);
-                    }
-                    
-                }).bind(this) );
+                loader.setLibraryPath("Media/rhino3dm/");
+                loader.load(
+                    filePath,
+                    function (object) {
+                        object.scale.set(scaleModel, scaleModel, scaleModel);
+                        this.model = [object];
+                        this.scene.add(object);
+                        p.render.bind(this)();
+                    }.bind(this),
+                    function () {},
+                    function (e) {
+                        if (retries < 3) {
+                            console.warn(e);
+                            console.log("Retrying to load model");
+                            retries++;
+                            setTimeout(
+                                function () {
+                                    p.loadModelFile.bind(this)(filePath, scaleModel, retries);
+                                }.bind(this),
+                                1000
+                            );
+                        } else {
+                            console.warn(e);
+                        }
+                    }.bind(this)
+                );
                 break;
-
             }
 
-            case '3ds':
-
-            {
+            case "3ds": {
                 // 3ds files dont store normal maps
                 // Normal texture must be in textures folder with all other textures in a folder named textures at same level that 3ds file
-                var normal = new THREE.TextureLoader().load( folderPath+'textures/normal.jpg' );
+                var normal = new THREE.TextureLoader().load(folderPath + "textures/normal.jpg");
 
-                var loader = new THREE.TDSLoader( );
-                loader.setResourcePath( folderPath+'textures/' );
-                loader.load( filePath, (function ( object ) {
+                var loader = new THREE.TDSLoader();
+                loader.setResourcePath(folderPath + "textures/");
+                loader.load(
+                    filePath,
+                    function (object) {
+                        object.traverse(function (child) {
+                            if (child.isMesh) {
+                                child.material.specular.setScalar(0.1);
+                                child.material.normalMap = normal;
+                            }
+                        });
 
-                    object.traverse( function ( child ) {
-
-                        if ( child.isMesh ) {
-
-                            child.material.specular.setScalar( 0.1 );
-                            child.material.normalMap = normal;
-
+                        object.scale.set(scaleModel, scaleModel, scaleModel);
+                        this.model = [object];
+                        this.scene.add(object);
+                        p.render.bind(this)();
+                    }.bind(this),
+                    function () {},
+                    function (e) {
+                        if (retries < 3) {
+                            console.warn(e);
+                            console.log("Retrying to load model");
+                            retries++;
+                            setTimeout(
+                                function () {
+                                    p.loadModelFile.bind(this)(filePath, scaleModel, retries);
+                                }.bind(this),
+                                1000
+                            );
+                        } else {
+                            console.warn(e);
                         }
-
-                    } );
-
-                    object.scale.set(scaleModel, scaleModel, scaleModel);
-                    this.scene.add(object);
-                    p.render.bind(this)();
-                }).bind(this), function () {
-
-                }, (function(e){
-                    if(retries<3){
-                        console.warn(e);
-                        console.log("Retrying to load model");
-                        retries++;
-                        setTimeout((function(){
-                            p.loadModelFile.bind(this)(filePath, scaleModel, retries);
-                        }).bind(this), 1000);
-                    }else{
-                        console.warn(e);
-                    }
-                    
-                }).bind(this) );
+                    }.bind(this)
+                );
 
                 break;
-
             }
 
-            case '3mf':
-
-            {
+            case "3mf": {
                 var loader = new THREE.ThreeMFLoader();
-                loader.load(filePath, (function(object){
-                    object.quaternion.setFromEuler( new THREE.Euler( - Math.PI / 2, 0, 0 ) ); 	// z-up conversion
+                loader.load(
+                    filePath,
+                    function (object) {
+                        object.quaternion.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0)); // z-up conversion
 
-                    object.traverse( function ( child ) {
+                        object.traverse(function (child) {
+                            child.castShadow = true;
+                        });
 
-                        child.castShadow = true;
-
-                    } );
-
-                    object.scale.set(scaleModel, scaleModel, scaleModel);
-                    this.scene.add(object);
-                    p.render();
-                }).bind(this), function () {
-
-                }, (function(e){
-                    if(retries<3){
-                        console.warn(e);
-                        console.log("Retrying to load model");
-                        retries++;
-                        setTimeout((function(){
-                            p.loadModelFile.bind(this)(filePath, scaleModel, retries);
-                        }).bind(this), 1000);
-                    }else{
-                        console.warn(e);
-                    }
-                    
-                }).bind(this) );
+                        object.scale.set(scaleModel, scaleModel, scaleModel);
+                        this.model = [object];
+                        this.scene.add(object);
+                        p.render.bind(this)();
+                    }.bind(this),
+                    function () {},
+                    function (e) {
+                        if (retries < 3) {
+                            console.warn(e);
+                            console.log("Retrying to load model");
+                            retries++;
+                            setTimeout(
+                                function () {
+                                    p.loadModelFile.bind(this)(filePath, scaleModel, retries);
+                                }.bind(this),
+                                1000
+                            );
+                        } else {
+                            console.warn(e);
+                        }
+                    }.bind(this)
+                );
 
                 break;
             }
 
-            case 'amf':
-
-            {
+            case "amf": {
                 var loader = new THREE.AMFLoader();
-                loader.load(filePath, (function(object){
-                    object.scale.set(scaleModel, scaleModel, scaleModel);
-                    this.scene.add(object);
-                    p.render.bind(this)();
-                }).bind(this), function () {
-
-                }, (function(e){
-                    if(retries<3){
-                        console.warn(e);
-                        console.log("Retrying to load model");
-                        retries++;
-                        setTimeout((function(){
-                            p.loadModelFile.bind(this)(filePath, scaleModel, retries);
-                        }).bind(this), 1000);
-                    }else{
-                        console.warn(e);
-                    }
-                    
-                }).bind(this) );
+                loader.load(
+                    filePath,
+                    function (object) {
+                        object.scale.set(scaleModel, scaleModel, scaleModel);
+                        this.model = [object];
+                        this.scene.add(object);
+                        p.render.bind(this)();
+                    }.bind(this),
+                    function () {},
+                    function (e) {
+                        if (retries < 3) {
+                            console.warn(e);
+                            console.log("Retrying to load model");
+                            retries++;
+                            setTimeout(
+                                function () {
+                                    p.loadModelFile.bind(this)(filePath, scaleModel, retries);
+                                }.bind(this),
+                                1000
+                            );
+                        } else {
+                            console.warn(e);
+                        }
+                    }.bind(this)
+                );
                 break;
             }
 
-            case 'bvh':
+            case "bvh":
                 var loader = new THREE.BVHLoader();
-                loader.load( filePath, (function ( result ) {
+                loader.load(
+                    filePath,
+                    function (result) {
+                        this.skeletonHelper = new THREE.SkeletonHelper(result.skeleton.bones[0]);
+                        this.skeletonHelper.skeleton = result.skeleton; // allow animation mixer to bind to THREE.SkeletonHelper directly
 
-                    this.skeletonHelper = new THREE.SkeletonHelper( result.skeleton.bones[ 0 ] );
-                    this.skeletonHelper.skeleton = result.skeleton; // allow animation mixer to bind to THREE.SkeletonHelper directly
+                        var boneContainer = new THREE.Group();
+                        boneContainer.add(result.skeleton.bones[0]);
 
-                    var boneContainer = new THREE.Group();
-                    boneContainer.add( result.skeleton.bones[ 0 ] );
+                        boneContainer.scale.set(scaleModel, scaleModel, scaleModel);
+                        this.skeletonHelper.scale.set(scaleModel, scaleModel, scaleModel);
 
-                    boneContainer.scale.set(scaleModel, scaleModel, scaleModel);
-                    this.skeletonHelper.scale.set(scaleModel, scaleModel, scaleModel);
+                        this.model = [this.skeletonHelper, boneContainer];
+                        this.scene.add(this.skeletonHelper);
+                        this.scene.add(boneContainer);
 
-                    this.scene.add( this.skeletonHelper );
-                    this.scene.add( boneContainer );
-
-                    if(this.settings.activateAnimation){
-                        // play animation
-                        this.mixer = new THREE.AnimationMixer( this.skeletonHelper );
-                        this.mixer.clipAction( result.clip ).setEffectiveWeight( 1.0 ).play();
-                    }
-                    
-
-                }).bind(this), function () {
-
-                }, (function(e){
-                    if(retries<3){
-                        console.warn(e);
-                        console.log("Retrying to load model");
-                        retries++;
-                        setTimeout((function(){
-                            p.loadModelFile.bind(this)(filePath, scaleModel, retries);
-                        }).bind(this), 1000);
-                    }else{
-                        console.warn(e);
-                    }
-                    
-                }).bind(this) );
+                        if (this.settings.activateAnimation) {
+                            // play animation
+                            this.mixer = new THREE.AnimationMixer(this.skeletonHelper);
+                            this.mixer.clipAction(result.clip).setEffectiveWeight(1.0).play();
+                        }
+                    }.bind(this),
+                    function () {},
+                    function (e) {
+                        if (retries < 3) {
+                            console.warn(e);
+                            console.log("Retrying to load model");
+                            retries++;
+                            setTimeout(
+                                function () {
+                                    p.loadModelFile.bind(this)(filePath, scaleModel, retries);
+                                }.bind(this),
+                                1000
+                            );
+                        } else {
+                            console.warn(e);
+                        }
+                    }.bind(this)
+                );
                 break;
 
-            case 'dae':
-
-            {
+            case "dae": {
                 var loader = new THREE.ColladaLoader();
-                loader.load( filePath, (function(collada){
-                    var dae = collada.scene;
-                    var animations = dae.animations;
-                    dae.traverse( (function ( node ) {
-                        if ( node.isSkinnedMesh ) {
-                            node.frustumCulled = false;
+                loader.load(
+                    filePath,
+                    function (collada) {
+                        var dae = collada.scene;
+                        var animations = dae.animations;
+                        dae.traverse(
+                            function (node) {
+                                if (node.isSkinnedMesh) {
+                                    node.frustumCulled = false;
+                                }
+                                if (this.settings.activateKinematics && node.isMesh) {
+                                    node.material.flatShading = true;
+                                }
+                            }.bind(this)
+                        );
+
+                        dae.updateMatrix();
+                        //kinematics = collada.kinematics;
+
+                        // TODO: Need to add selection of animations
+                        if (this.settings.activateAnimation) {
+                            this.mixer = new THREE.AnimationMixer(dae);
+                            this.mixer.clipAction(animations[0]).play();
                         }
-                        if(this.settings.activateKinematics && node.isMesh){
-                            node.material.flatShading = true;
+
+                        dae.scale.set(scaleModel, scaleModel, scaleModel);
+                        this.model = [dae];
+                        this.scene.add(dae);
+
+                        p.render.bind(this)();
+                    }.bind(this),
+                    function () {},
+                    function (e) {
+                        if (retries < 3) {
+                            console.warn(e);
+                            console.log("Retrying to load model");
+                            retries++;
+                            setTimeout(
+                                function () {
+                                    p.loadModelFile.bind(this)(filePath, scaleModel, retries);
+                                }.bind(this),
+                                1000
+                            );
+                        } else {
+                            console.warn(e);
                         }
-                    }).bind(this) );
-
-                    dae.updateMatrix();
-                    //kinematics = collada.kinematics;
-
-
-                    // TODO: Need to add selection of animations
-                    if(this.settings.activateAnimation){
-                        this.mixer = new THREE.AnimationMixer( dae );
-                        this.mixer.clipAction( animations[0] ).play();
-                    }
-
-                    dae.scale.set(scaleModel, scaleModel, scaleModel);
-                    this.scene.add( dae );
-                    
-                    p.render.bind(this)();
-                }).bind(this), function () {
-
-                }, (function(e){
-                    if(retries<3){
-                        console.warn(e);
-                        console.log("Retrying to load model");
-                        retries++;
-                        setTimeout((function(){
-                            p.loadModelFile.bind(this)(filePath, scaleModel, retries);
-                        }).bind(this), 1000);
-                    }else{
-                        console.warn(e);
-                    }
-                    
-                }).bind(this) );
+                    }.bind(this)
+                );
                 break;
-
             }
 
-            case 'drc':
-
-            {
-
-
+            case "drc": {
                 var loader = new THREE.DRACOLoader();
                 // WARNING for use drc files
                 // You must add draco package to Media folder
-                loader.setDecoderPath( 'Media/draco/' );
-                loader.load( filePath, (function ( geometry ) {
+                loader.setDecoderPath("Media/draco/");
+                loader.load(
+                    filePath,
+                    function (geometry) {
+                        var object;
+                        geometry.computeVertexNormals();
+                        if (geometry.index !== null) {
+                            var material = new THREE.MeshStandardMaterial();
 
-                    var object;
-                    geometry.computeVertexNormals();
-                    if ( geometry.index !== null ) {
+                            object = new THREE.Mesh(geometry, material);
+                            object.name = filename;
+                        } else {
+                            var material = new THREE.PointsMaterial({ size: 0.01 });
+                            material.vertexColors = geometry.hasAttribute("color");
 
-                        var material = new THREE.MeshStandardMaterial();
-
-                        object = new THREE.Mesh( geometry, material );
-                        object.name = filename;
-
-                    } else {
-
-                        var material = new THREE.PointsMaterial( { size: 0.01 } );
-                        material.vertexColors = geometry.hasAttribute( 'color' );
-
-                        object = new THREE.Points( geometry, material );
-                        object.name = filename;
-
-                    }
-
-
-                    object.scale.set(scaleModel, scaleModel, scaleModel);
-                    this.scene.add( object );
-                    loader.dispose();
-
-                
-                }).bind(this), function () {
-
-                }, (function(e){
-                    if(retries<3){
-                        console.warn(e);
-                        console.log("Retrying to load model");
-                        retries++;
-                        setTimeout((function(){
-                            p.loadModelFile.bind(this)(filePath, scaleModel, retries);
-                        }).bind(this), 1000);
-                    }else{
-                        console.warn(e);
-                    }
-                    
-                }).bind(this) );
-
-                break;
-
-            }
-
-            case 'fbx':
-
-            {
-                var loader = new THREE.FBXLoader( );
-                loader.load( filePath, (function ( object ) {
-
-                    if(this.settings.activateAnimation){
-                        this.mixer = new THREE.AnimationMixer( object );
-                        this.mixer.clipAction( object.animations[0] ).play();
-                    }
-
-                    object.traverse( function ( child ) {
-
-                        if ( child.isMesh ) {
-
-                            child.castShadow = true;
-                            child.receiveShadow = true;
-
+                            object = new THREE.Points(geometry, material);
+                            object.name = filename;
                         }
 
-                    } );
-                    object.scale.set(scaleModel, scaleModel, scaleModel);
-                    this.scene.add( object );
-
-                
-                }).bind(this), function () {
-
-                }, (function(e){
-                    if(retries<3){
-                        console.warn(e);
-                        console.log("Retrying to load model");
-                        retries++;
-                        setTimeout((function(){
-                            p.loadModelFile.bind(this)(filePath, scaleModel, retries);
-                        }).bind(this), 1000);
-                    }else{
-                        console.warn(e);
-                    }
-                    
-                }).bind(this) );
-
+                        object.scale.set(scaleModel, scaleModel, scaleModel);
+                        this.model = [object];
+                        this.scene.add(object);
+                        loader.dispose();
+                    }.bind(this),
+                    function () {},
+                    function (e) {
+                        if (retries < 3) {
+                            console.warn(e);
+                            console.log("Retrying to load model");
+                            retries++;
+                            setTimeout(
+                                function () {
+                                    p.loadModelFile.bind(this)(filePath, scaleModel, retries);
+                                }.bind(this),
+                                1000
+                            );
+                        } else {
+                            console.warn(e);
+                        }
+                    }.bind(this)
+                );
 
                 break;
-
             }
 
-            case 'glb':
+            case "fbx": {
+                var loader = new THREE.FBXLoader();
+                loader.load(
+                    filePath,
+                    function (object) {
+                        if (this.settings.activateAnimation) {
+                            this.mixer = new THREE.AnimationMixer(object);
+                            this.mixer.clipAction(object.animations[0]).play();
+                        }
 
-            {
+                        object.traverse(function (child) {
+                            if (child.isMesh) {
+                                child.castShadow = true;
+                                child.receiveShadow = true;
+                            }
+                        });
+                        object.scale.set(scaleModel, scaleModel, scaleModel);
+                        this.model = [object];
+                        this.scene.add(object);
+                    }.bind(this),
+                    function () {},
+                    function (e) {
+                        if (retries < 3) {
+                            console.warn(e);
+                            console.log("Retrying to load model");
+                            retries++;
+                            setTimeout(
+                                function () {
+                                    p.loadModelFile.bind(this)(filePath, scaleModel, retries);
+                                }.bind(this),
+                                1000
+                            );
+                        } else {
+                            console.warn(e);
+                        }
+                    }.bind(this)
+                );
+
+                break;
+            }
+
+            case "glb": {
                 // WARNING for use glb files
                 // You must add draco package to Media folder
                 var dracoLoader = new THREE.DRACOLoader();
-                dracoLoader.setDecoderPath( 'Media/draco/gltf/' );
+                dracoLoader.setDecoderPath("Media/draco/gltf/");
 
                 var loader = new THREE.GLTFLoader();
-                loader.setDRACOLoader( dracoLoader );
-                loader.load( filePath, (function ( gltf ) {
+                loader.setDRACOLoader(dracoLoader);
+                loader.load(
+                    filePath,
+                    function (gltf) {
+                        if (this.settings.activateAnimation) {
+                            this.mixer = new THREE.AnimationMixer(gltf.scene);
+                            this.mixer.clipAction(gltf.animations[0]).play();
+                        }
 
-
-                    if(this.settings.activateAnimation){
-                        this.mixer = new THREE.AnimationMixer( gltf.scene );
-                        this.mixer.clipAction( gltf.animations[0] ).play();
-                    }
-
-                    this.scene.add( gltf.scene );
-
-                }).bind(this), function () {
-
-                }, (function(e){
-                    if(retries<3){
-                        console.warn(e);
-                        console.log("Retrying to load model");
-                        retries++;
-                        setTimeout((function(){
-                            p.loadModelFile.bind(this)(filePath, scaleModel, retries);
-                        }).bind(this), 1000);
-                    }else{
-                        console.warn(e);
-                    }
-                    
-                }).bind(this) );
-
+                        this.model = [gltf.scene];
+                        this.scene.add(gltf.scene);
+                    }.bind(this),
+                    function () {},
+                    function (e) {
+                        if (retries < 3) {
+                            console.warn(e);
+                            console.log("Retrying to load model");
+                            retries++;
+                            setTimeout(
+                                function () {
+                                    p.loadModelFile.bind(this)(filePath, scaleModel, retries);
+                                }.bind(this),
+                                1000
+                            );
+                        } else {
+                            console.warn(e);
+                        }
+                    }.bind(this)
+                );
 
                 break;
-
             }
 
-            case 'gltf':
-
-            {
-
-                new THREE.GLTFLoader()
-                .load(filePath, (function(gltf){
-                    gltf.scene.scale.set(scaleModel, scaleModel, scaleModel);
-                    this.scene.add( gltf.scene );
-                    p.render.bind(this)();
-                }).bind(this), function () {
-
-                }, (function(e){
-                    if(retries<3){
-                        console.warn(e);
-                        console.log("Retrying to load model");
-                        retries++;
-                        setTimeout((function(){
-                            p.loadModelFile.bind(this)(filePath, scaleModel, retries);
-                        }).bind(this), 1000);
-                    }else{
-                        console.warn(e);
-                    }
-                    
-                }).bind(this) );
+            case "gltf": {
+                new THREE.GLTFLoader().load(
+                    filePath,
+                    function (gltf) {
+                        gltf.scene.scale.set(scaleModel, scaleModel, scaleModel);
+                        this.model = [gltf.scale];
+                        this.scene.add(gltf.scene);
+                        p.render.bind(this)();
+                    }.bind(this),
+                    function () {},
+                    function (e) {
+                        if (retries < 3) {
+                            console.warn(e);
+                            console.log("Retrying to load model");
+                            retries++;
+                            setTimeout(
+                                function () {
+                                    p.loadModelFile.bind(this)(filePath, scaleModel, retries);
+                                }.bind(this),
+                                1000
+                            );
+                        } else {
+                            console.warn(e);
+                        }
+                    }.bind(this)
+                );
 
                 break;
-
             }
 
             // TODO : Implement remaining file format
@@ -597,8 +581,8 @@ define(['brease/core/BaseWidget',
             //     var loader = new THREE.IFCLoader();
             //     loader.ifcManager.setWasmPath( 'Media/ifc/' );
             //     loader.load( filePath, (function ( model ) {
-			// 		this.scene.add( model.mesh );
-			// 		p.render.bind(this)();
+            // 		this.scene.add( model.mesh );
+            // 		p.render.bind(this)();
             //     }).bind(this), function () {
 
             //     }, (function(e){
@@ -612,9 +596,8 @@ define(['brease/core/BaseWidget',
             //         }else{
             //             console.warn(e);
             //         }
-                    
+
             //     }).bind(this) );
-   
 
             // 	break;
 
@@ -974,50 +957,132 @@ define(['brease/core/BaseWidget',
             // }
 
             default:
-
-                console.warn( 'Unsupported file format (' + extension + ').' );
+                console.warn("Unsupported file format (" + extension + ").");
 
                 break;
-
         }
-        
-	};
+    };
+
+    /**
+     * @method setPosX
+     * @iatStudioExposed
+     * set the actual posX
+     * @param {Number} value
+     */
+    p.setPosX = function (value) {
+        if (value !== undefined) {
+            this.settings.posX = parseFloat(value);
+        }
+    };
+
+    /**
+     * @method getPosX
+     * get posX
+     * @return {Number}
+     */
+    p.getPosX = function () {
+        return this.settings.posX;
+    };
+
+    /**
+     * @method setPosY
+     * @iatStudioExposed
+     * set the actual posY
+     * @param {Number} value
+     */
+    p.setPosY = function (value) {
+        if (value !== undefined) {
+            this.settings.posY = parseFloat(value);
+        }
+    };
+
+    /**
+     * @method getPosY
+     * get posY
+     * @return {Number}
+     */
+    p.getPosY = function () {
+        return this.settings.posY;
+    };
+
+    /**
+     * @method setPosZ
+     * @iatStudioExposed
+     * set the actual posZ
+     * @param {Number} value
+     */
+    p.setPosZ = function (value) {
+        if (value !== undefined) {
+            this.settings.posZ = parseFloat(value);
+        }
+    };
+
+    /**
+     * @method getPosZ
+     * get posZ
+     * @return {Number}
+     */
+    p.getPosZ = function () {
+        return this.settings.posZ;
+    };
+
+    /**
+     * @method setShowGrid
+     * @iatStudioExposed
+     * set the actual showGrid
+     * @param {Boolean} value
+     */
+    p.setShowGrid = function (value) {
+        if (value !== undefined) {
+            this.settings.showGrid = value;
+        }
+    };
+
+    /**
+     * @method getShowGrid
+     * get showGrid
+     * @return {Boolean}
+     */
+    p.getShowGrid = function () {
+        return this.settings.showGrid;
+    };
 
     p.onWindowResize = function () {
-        
-        this.elem.firstChild.style.width = "100%";
-        this.elem.firstChild.style.height = "100%";
+        this.canvas.style.width = "100%";
+        this.canvas.style.height = "100%";
 
-
-        var clientWidth = this.elem.firstChild.clientWidth;
-        var clientHeight = this.elem.firstChild.clientHeight;
+        var clientWidth = this.canvas.clientWidth;
+        var clientHeight = this.canvas.clientHeight;
 
         this.camera.aspect = clientWidth / clientHeight;
         this.camera.updateProjectionMatrix();
 
-        this.renderer.setSize( clientWidth, clientHeight );
-
+        this.renderer.setSize(clientWidth, clientHeight);
     };
 
-
     p.animate = function () {
-        requestAnimationFrame( p.animate.bind(this) );
+        requestAnimationFrame(p.animate.bind(this));
 
         var delta = this.clock.getDelta();
 
-        if ( this.mixer ) this.mixer.update( delta );
-        if ( this.controls ) this.controls.update();
+        if (this.mixer) this.mixer.update(delta);
+        if (this.controls) this.controls.update();
 
-        
+        this.grid.visible = this.getShowGrid();
+
+        if (this.model) {
+            this.model.forEach(
+                function (item) {
+                    item.position.copy(new THREE.Vector3(this.getPosX(), this.getPosZ(), this.getPosY()));
+                }.bind(this)
+            );
+        }
         p.render.bind(this)();
     };
 
-    p.render = function(){
-        this.renderer.render( this.scene, this.camera );
+    p.render = function () {
+        this.renderer.render(this.scene, this.camera);
     };
 
-
-
     return dragAndDropCapability.decorate(WidgetClass, false);
-
 });

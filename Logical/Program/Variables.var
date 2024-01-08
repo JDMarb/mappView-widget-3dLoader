@@ -1,0 +1,6 @@
+VAR
+	posX : REAL;
+	posY : REAL;
+	posZ : REAL;
+	showGrid : BOOL;
+END_VAR
